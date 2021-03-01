@@ -1,0 +1,79 @@
+#Python Code using Anaconda Spyder
+
+#keep all packages import together
+import pandas as pd
+import numpy as np
+import sklearn as skt
+from sklearn.cluster import KMeans
+from matplotlib import pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn import preprocessing
+
+#read is the csv file downloaded from Kaggle
+lol = pd.read_csv("lolBaseStats.csv", sep = ",")
+
+#scale data
+x = lol.iloc[:, 2:-1].values #returns a numpy array, not df
+min_max_scalar = preprocessing.MinMaxScaler()
+x_scaled = min_max_scalar.fit_transform(x)
+df = pd.DataFrame(x_scaled)
+
+#want to compare when scaled and not scaled. the below dataset is not scaled and does not include the string variable "names"
+dataset = lol.iloc[:,2:]
+
+lol_r = PCA(n_components = 2).fit(dataset).transform(dataset)
+plt.scatter(lol_r[:,0], lol_r[:,1])
+lol['reduced_x'] = lol_r[:,0]
+lol['reduced_y'] = lol_r[:,1]
+
+for i in range( 3,4):
+   
+    kmeans = KMeans(n_clusters = i)
+    kmeans.fit( dataset )
+    score = kmeans.score( dataset )
+
+    
+result = kmeans.labels_
+cluster = 'cluster'
+lol.insert(1, cluster, result)
+
+colors = ['red', 'green', 'blue']
+for color, i in zip(colors, range(len(colors))):
+    cluster_nr = i
+    data = lol.loc[lol[cluster]== cluster_nr, ["reduced_x","reduced_y", cluster ]] 
+    plt.scatter(data["reduced_x"], data["reduced_y"], color = color)
+    
+    
+#######
+    
+#now use scaled data and compare graphs    
+dataset = df.iloc[:,2:]
+
+lol_r = PCA(n_components = 2).fit(dataset).transform(dataset)
+plt.scatter(lol_r[:,0], lol_r[:,1])
+df['reduced_x'] = lol_r[:,0]
+df['reduced_y'] = lol_r[:,1]
+
+for i in range( 3,4):
+   
+    kmeans = KMeans(n_clusters = i)
+    kmeans.fit( dataset )
+    score = kmeans.score( dataset )
+
+    
+result = kmeans.labels_
+cluster = 'cluster'
+df.insert(1, cluster, result)
+
+colors = ['red', 'green', 'blue']
+
+
+for color, i in zip(colors, range(len(colors))):
+    cluster_nr = i
+    data = df.loc[df[cluster]== cluster_nr, ["reduced_x","reduced_y", cluster ]] 
+    plt.scatter(data["reduced_x"], data["reduced_y"], color = color)
+    
+   df.insert(0, "name", lol["name"])
+   
+ #You should be able to see the difference in graphs between the scaled and unscaled data. 
+ #The clusters are much more apparent and their corresponding values are easier to manage
